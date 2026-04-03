@@ -67,12 +67,14 @@ class GitManager:
             f.write(resolved_content)
         
         repo = Repo(repo_path)
-        repo.index.add([file_path])
+        # Using repo.git.add is more robust for resolving unmerged states
+        repo.git.add(file_path)
 
     def commit_and_push(self, repo_path: str, branch_name: str, message: str):
         """Commits and pushes the resolved changes."""
         repo = Repo(repo_path)
-        repo.index.commit(message)
+        # Using repo.git.commit is more robust during a merge state
+        repo.git.commit("-m", message)
         origin = repo.remote(name='origin')
         origin.push(branch_name)
 

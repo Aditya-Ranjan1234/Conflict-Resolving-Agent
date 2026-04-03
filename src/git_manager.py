@@ -28,10 +28,16 @@ class GitManager:
         Returns a list of files with conflicts.
         """
         repo = Repo(repo_path)
+        
+        # Ensure we have the latest from origin
+        repo.remotes.origin.fetch()
+        
+        # Checkout target branch (base of the PR)
         repo.git.checkout(target_branch)
         
         try:
-            repo.git.merge(source_branch)
+            # Use origin/ prefix for the source branch to ensure it's found
+            repo.git.merge(f"origin/{source_branch}")
             return []  # No conflicts
         except GitCommandError as e:
             if "CONFLICT" in str(e):

@@ -20,6 +20,13 @@ class GitManager:
             shutil.rmtree(repo_path)
         
         Repo.clone_from(repo_url, repo_path)
+        
+        # Configure git identity for the repository
+        repo = Repo(repo_path)
+        with repo.config_writer() as cw:
+            cw.set_value("user", "name", "Conflict Resolving Agent")
+            cw.set_value("user", "email", "agent@conflict-resolver.ai")
+            
         return repo_path
 
     def attempt_merge(self, repo_path: str, source_branch: str, target_branch: str) -> List[str]:

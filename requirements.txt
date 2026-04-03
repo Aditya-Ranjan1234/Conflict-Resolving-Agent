@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+google-cloud-aiplatform
+google-cloud-secret-manager
+GitPython
+requests
+pydantic
+python-dotenv
+pytest

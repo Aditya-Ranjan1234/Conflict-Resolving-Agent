@@ -33,27 +33,36 @@ Enable the following APIs in the **API & Services > Library** section:
 4. Paste your GitHub Personal Access Token (PAT) as the secret value.
 5. Click **Create Secret**.
 
-## Step 5: Deploy to Cloud Run
-You can deploy using the Google Cloud CLI (`gcloud`) from your local machine:
+## Step 5: Deploy to Cloud Run (Manual Console Method)
+To deploy your agent directly from the GCP website:
 
-1. Authenticate:
-   ```bash
-   gcloud auth login
-   ```
-2. Set your project:
-   ```bash
-   gcloud config set project [YOUR_PROJECT_ID]
-   ```
-3. Deploy:
-   ```bash
-   gcloud run deploy conflict-agent \
-     --source . \
-     --region us-central1 \
-     --allow-unauthenticated \
-     --set-env-vars GCP_PROJECT_ID=[YOUR_PROJECT_ID] \
-     --set-secrets GITHUB_TOKEN=GITHUB_TOKEN:latest
-   ```
-4. Note the **Service URL** provided at the end (e.g., `https://conflict-agent-xxxx.run.app`).
+1. Go to the **[Cloud Run](https://console.cloud.google.com/run)** page in the GCP Console.
+2. Click **CREATE SERVICE**.
+3. Choose **"Continuously deploy new revisions from a source repository"**.
+4. Click **SET UP WITH CLOUD BUILD**.
+   - **Repository Provider**: Select **GitHub**.
+   - **Repository**: Select your `conflict-resolving-agent` repository (you may need to authenticate GitHub first).
+   - Click **Next**.
+   - **Build Configuration**:
+     - **Branch**: Select `main`.
+     - **Build Type**: Select **Dockerfile**.
+     - **Source location**: `/Dockerfile`.
+     - Click **Save**.
+5. **Service Settings**:
+   - **Service Name**: `conflict-agent`.
+   - **Region**: Choose `us-central1`.
+   - **Authentication**: Select **"Allow unauthenticated invocations"** (This allows GitHub webhooks to reach the URL).
+6. **Container, Networking, Security** (Expand this section):
+   - **Variables & Secrets** tab:
+     - Click **ADD VARIABLE**:
+       - Name: `GCP_PROJECT_ID`
+       - Value: `[YOUR_PROJECT_ID]`
+     - Click **REFERENCE A SECRET**:
+       - Select `GITHUB_TOKEN`.
+       - Version: `latest`.
+       - Name: `GITHUB_TOKEN` (This is how it will be exposed as an env var).
+7. Click **CREATE**.
+8. Wait for the deployment to finish. Once done, copy the **Service URL** (e.g., `https://conflict-agent-xxxx.run.app`).
 
 ## Step 6: Configure GitHub Webhook
 1. Go to your GitHub repository **Settings > Webhooks**.

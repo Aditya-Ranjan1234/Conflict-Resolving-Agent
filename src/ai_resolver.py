@@ -3,7 +3,7 @@ from vertexai.generative_models import GenerativeModel, Part, GenerationConfig
 import os
 
 class AIResolver:
-    def __init__(self, project_id: str, location: str = "us-central1", model_name: str = "gemini-1.5-flash"):
+    def __init__(self, project_id: str, location: str = "us-central1", model_name: str = "gemini-2.5-flash-lite"):
         self.project_id = project_id
         self.location = location
         self.model_name = model_name

@@ -39,12 +39,20 @@ class GitManager:
         # Ensure we have the latest from origin
         repo.remotes.origin.fetch()
         
+        # Create a local tracking branch for the source if it doesn't exist
+        try:
+            repo.git.checkout("-b", source_branch, f"origin/{source_branch}")
+        except GitCommandError:
+            # If it already exists, just switch to it and pull
+            repo.git.checkout(source_branch)
+            repo.git.pull("origin", source_branch)
+
         # Checkout target branch (base of the PR)
         repo.git.checkout(target_branch)
         
         try:
-            # Use origin/ prefix for the source branch to ensure it's found
-            repo.git.merge(f"origin/{source_branch}")
+            # Merge the local source branch
+            repo.git.merge(source_branch)
             return []  # No conflicts
         except GitCommandError as e:
             if "CONFLICT" in str(e):
@@ -75,8 +83,8 @@ class GitManager:
         repo = Repo(repo_path)
         # Using repo.git.commit is more robust during a merge state
         repo.git.commit("-m", message)
-        origin = repo.remote(name='origin')
-        origin.push(branch_name)
+        # Push using the branch name correctly to origin
+        repo.git.push("origin", branch_name)
 
     def cleanup(self, repo_path: str):
         """Removes the cloned repository."""

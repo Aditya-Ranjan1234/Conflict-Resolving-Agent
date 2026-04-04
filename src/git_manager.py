@@ -22,7 +22,8 @@ class GitManager:
         
         if token:
             # Use proper GitHub token format: https://x-access-token:<token>@github.com/user/repo.git
-            repo_url = repo_url.replace("https://", f"https://x-access-token:{token}@")
+            if repo_url.startswith("https://"):
+                repo_url = f"https://x-access-token:{token}@{repo_url[8:]}"  # Remove https:// and add token
             logger.info("Using token for authentication with x-access-token format")
         
         repo_path = os.path.join(self.base_path, repo_name)
@@ -173,7 +174,11 @@ class GitManager:
                 logger.info("Configuring authentication for push...")
                 origin = repo.remotes.origin
                 # Use proper GitHub token format for push URL
-                push_url = origin.url.replace("https://", f"https://x-access-token:{token}@")
+                original_url = origin.url
+                if original_url.startswith("https://"):
+                    push_url = f"https://x-access-token:{token}@{original_url[8:]}"  # Remove https:// and add token
+                else:
+                    push_url = original_url
                 origin.set_url(push_url, push=True)
                 logger.info("Authentication configured for push with x-access-token format")
             else:

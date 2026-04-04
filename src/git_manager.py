@@ -1,6 +1,7 @@
 import os
 import logging
 import shutil
+from urllib.parse import quote
 from git import Repo, GitCommandError
 from typing import List, Dict, Tuple
 
@@ -21,10 +22,11 @@ class GitManager:
         logger.info(f"Starting clone of {repo_name} from {repo_url}")
         
         if token:
-            # Use proper GitHub token format: https://x-access-token:<token>@github.com/user/repo.git
+            # Use proper GitHub token format with URL encoding: https://x-access-token:<encoded-token>@github.com/user/repo.git
             if repo_url.startswith("https://"):
-                repo_url = f"https://x-access-token:{token}@{repo_url[8:]}"  # Remove https:// and add token
-            logger.info("Using token for authentication with x-access-token format")
+                encoded_token = quote(token, safe="")
+                repo_url = f"https://x-access-token:{encoded_token}@{repo_url[8:]}"  # Remove https:// and add token
+            logger.info("Using token for authentication with x-access-token format (URL encoded)")
         
         repo_path = os.path.join(self.base_path, repo_name)
         logger.info(f"Target clone path: {repo_path}")
@@ -173,21 +175,22 @@ class GitManager:
             if token:
                 logger.info("Configuring authentication for push...")
                 origin = repo.remotes.origin
-                # Use proper GitHub token format for push URL
+                # Use proper GitHub token format with URL encoding for push URL
                 original_url = origin.url
                 if original_url.startswith("https://"):
-                    push_url = f"https://x-access-token:{token}@{original_url[8:]}"  # Remove https:// and add token
+                    encoded_token = quote(token, safe="")
+                    push_url = f"https://x-access-token:{encoded_token}@{original_url[8:]}"  # Remove https:// and add token
                 else:
                     push_url = original_url
                 origin.set_url(push_url, push=True)
-                logger.info("Authentication configured for push with x-access-token format")
+                logger.info("Authentication configured for push with x-access-token format (URL encoded)")
             else:
                 logger.warning("No token provided for push authentication")
             
-            # Push using the branch name correctly to origin
-            logger.info(f"Pushing to origin/{branch_name}...")
-            repo.git.push("origin", branch_name)
-            logger.info(f"Successfully pushed to branch: {branch_name}")
+            # Push using the correct branch - we're on main after merge, so push main
+            logger.info(f"Pushing to origin/main...")
+            repo.git.push("origin", "main")
+            logger.info(f"Successfully pushed to branch: main")
             
         except GitCommandError as e:
             logger.error(f"Git command failed: {str(e)}")

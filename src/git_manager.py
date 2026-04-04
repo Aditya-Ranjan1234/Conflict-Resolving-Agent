@@ -21,9 +21,9 @@ class GitManager:
         logger.info(f"Starting clone of {repo_name} from {repo_url}")
         
         if token:
-            # Inject token into URL: https://<token>@github.com/user/repo.git
-            repo_url = repo_url.replace("https://", f"https://{token}@")
-            logger.info("Using token for authentication")
+            # Use proper GitHub token format: https://x-access-token:<token>@github.com/user/repo.git
+            repo_url = repo_url.replace("https://", f"https://x-access-token:{token}@")
+            logger.info("Using token for authentication with x-access-token format")
         
         repo_path = os.path.join(self.base_path, repo_name)
         logger.info(f"Target clone path: {repo_path}")
@@ -172,10 +172,10 @@ class GitManager:
             if token:
                 logger.info("Configuring authentication for push...")
                 origin = repo.remotes.origin
-                # Update the push URL to include token for authentication
-                push_url = origin.url.replace("https://", f"https://{token}@")
+                # Use proper GitHub token format for push URL
+                push_url = origin.url.replace("https://", f"https://x-access-token:{token}@")
                 origin.set_url(push_url, push=True)
-                logger.info("Authentication configured for push")
+                logger.info("Authentication configured for push with x-access-token format")
             else:
                 logger.warning("No token provided for push authentication")
             

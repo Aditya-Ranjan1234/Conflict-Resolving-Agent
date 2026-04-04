@@ -1,6 +1,8 @@
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part, GenerationConfig
-import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AIResolver:
     def __init__(self, project_id: str, location: str = "us-central1", model_name: str = "gemini-2.5-flash-lite"):
@@ -8,14 +10,24 @@ class AIResolver:
         self.location = location
         self.model_name = model_name
         
-        # Initialize Vertex AI
-        vertexai.init(project=self.project_id, location=self.location)
-        self.model = GenerativeModel(self.model_name)
+        logger.info(f"Initializing AIResolver with project_id: {project_id}, location: {location}, model: {model_name}")
+        
+        try:
+            # Initialize Vertex AI
+            vertexai.init(project=self.project_id, location=self.location)
+            self.model = GenerativeModel(self.model_name)
+            logger.info("AIResolver initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize AIResolver: {str(e)}")
+            raise
 
     def resolve_conflict(self, file_path: str, conflict_content: str, surrounding_context: str = "") -> str:
         """
         Uses Gemini to resolve a Git merge conflict.
         """
+        logger.info(f"Starting AI resolution for file: {file_path}")
+        logger.info(f"Conflict content length: {len(conflict_content)} characters")
+        
         prompt = f"""
         You are a senior software engineer specialized in resolving complex Git merge conflicts.
         
@@ -37,24 +49,36 @@ class AIResolver:
         FINAL RESOLVED CONTENT:
         """
         
-        generation_config = GenerationConfig(
-            temperature=0.1,
-            top_p=0.95,
-            candidate_count=1,
-            max_output_tokens=8192,
-        )
+        logger.info("Sending prompt to AI model...")
         
-        response = self.model.generate_content(
-            prompt,
-            generation_config=generation_config,
-        )
-        
-        # Clean up response: remove markdown backticks if present
-        resolved_content = response.text.strip()
-        if resolved_content.startswith("```"):
-            # Remove first and last lines (the backticks)
-            lines = resolved_content.splitlines()
-            if len(lines) > 2:
-                resolved_content = "\n".join(lines[1:-1])
-        
-        return resolved_content
+        try:
+            generation_config = GenerationConfig(
+                temperature=0.1,
+                top_p=0.95,
+                candidate_count=1,
+                max_output_tokens=8192,
+            )
+            
+            response = self.model.generate_content(
+                prompt,
+                generation_config=generation_config,
+            )
+            
+            logger.info(f"Received AI response, length: {len(response.text)} characters")
+            
+            # Clean up response: remove markdown backticks if present
+            resolved_content = response.text.strip()
+            if resolved_content.startswith("```"):
+                logger.info("Removing markdown code blocks from response")
+                # Remove first and last lines (the backticks)
+                lines = resolved_content.splitlines()
+                if len(lines) > 2:
+                    resolved_content = "\n".join(lines[1:-1])
+            
+            logger.info(f"Final resolved content length: {len(resolved_content)} characters")
+            return resolved_content
+            
+        except Exception as e:
+            logger.error(f"AI resolution failed for {file_path}: {str(e)}")
+            logger.exception("Full AI resolution error:")
+            raise

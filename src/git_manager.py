@@ -174,15 +174,12 @@ class GitManager:
             # Configure push URL with token if provided
             if token:
                 logger.info("Configuring authentication for push...")
-                origin = repo.remotes.origin
                 # Use proper GitHub token format with URL encoding for push URL
-                original_url = origin.url
-                if original_url.startswith("https://"):
-                    encoded_token = quote(token, safe="")
-                    push_url = f"https://x-access-token:{encoded_token}@{original_url[8:]}"  # Remove https:// and add token
-                else:
-                    push_url = original_url
-                origin.set_url(push_url, push=True)
+                encoded_token = quote(token, safe="")
+                auth_url = f"https://x-access-token:{encoded_token}@github.com/Aditya-Ranjan1234/Test-Conflict-Resolving-Agent.git"
+                
+                # Explicitly set the remote URL for both push and fetch
+                repo.git.remote("set-url", "origin", auth_url)
                 logger.info("Authentication configured for push with x-access-token format (URL encoded)")
             else:
                 logger.warning("No token provided for push authentication")

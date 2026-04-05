@@ -192,8 +192,10 @@ async def process_pull_request(payload: Dict[str, Any]):
             logger.info(f"Created database record for PR: {pr_id}")
         except Exception as e:
             logger.error(f"Failed to create PR record: {str(e)}")
-            # Continue without database - functionality will be limited
+            logger.warning("Disabling database operations for this PR")
+            # Set both to None to prevent any database usage
             db_manager = None
+            pr_id = None
 
     repo_path = None
     edit_summary = {

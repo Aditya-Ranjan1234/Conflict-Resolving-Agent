@@ -28,8 +28,10 @@ class DatabaseManager:
         """Create a new PR record in Datastore."""
         try:
             pr_id = str(uuid.uuid4())
+            logger.info(f"Attempting to create PR record with ID: {pr_id}")
             
             key = self.client.key("PRRecord", pr_id)
+            logger.info(f"Created Datastore key for PRRecord: {pr_id}")
             
             entity = datastore.Entity(key)
             entity.update({
@@ -46,11 +48,13 @@ class DatabaseManager:
                 "error_message": None
             })
             
+            logger.info(f"Putting entity to Datastore...")
             self.client.put(entity)
-            logger.info(f"Created PR record: {pr_id} for PR #{pr_data.get('number')}")
+            logger.info(f"Successfully created PR record: {pr_id} for PR #{pr_data.get('number')}")
             return pr_id
         except Exception as e:
             logger.error(f"Failed to create PR record: {str(e)}")
+            logger.exception("Full exception details:")
             raise
     
     def update_pr_status(self, pr_id: str, status: str, **kwargs):

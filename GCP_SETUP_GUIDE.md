@@ -32,14 +32,22 @@ Enable the following APIs in the **API & Services > Library** section:
    - `Logging Admin`
 5. Click **Create and Continue**, then **Done**.
 
-## Step 4: Store GitHub Token in Secret Manager
+## Step 4: Create Cloud Datastore Database
+1. Go to **Datastore** → **Entities** (or visit: `console.cloud.google.com/datastore/setup`)
+2. If you see "Create a Cloud Datastore or Cloud Firestore database", click **Create Database**
+3. **Database Type**: Choose **Cloud Datastore** (not Firestore)
+4. **Region**: Select the same region as your Cloud Run service (e.g., `us-central1`)
+5. Click **Create Database**
+6. Wait for the database to be initialized (takes 1-2 minutes)
+
+## Step 5: Store GitHub Token in Secret Manager
 1. Go to **Security > Secret Manager**.
 2. Click **Create Secret**.
 3. Name it `GITHUB_TOKEN`.
 4. Paste your GitHub Personal Access Token (PAT) as the secret value.
 5. Click **Create Secret**.
 
-## Step 5: Deploy to Cloud Run (Manual Console Method)
+## Step 6: Deploy to Cloud Run (Manual Console Method)
 To deploy your agent directly from the GCP website:
 
 1. Go to the **[Cloud Run](https://console.cloud.google.com/run)** page in the GCP Console.
@@ -73,7 +81,7 @@ To deploy your agent directly from the GCP website:
 7. Click **CREATE**.
 8. Wait for the deployment to finish. Once done, copy the **Service URL** (e.g., `https://conflict-agent-xxxx.run.app`).
 
-## Step 6: Configure GitHub Webhook
+## Step 7: Configure GitHub Webhook
 1. Go to your GitHub repository **Settings > Webhooks**.
 2. Click **Add webhook**.
 3. Set **Payload URL** to: `[YOUR_SERVICE_URL]/webhook`.

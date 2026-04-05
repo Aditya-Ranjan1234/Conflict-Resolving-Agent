@@ -192,6 +192,8 @@ async def process_pull_request(payload: Dict[str, Any]):
             logger.info(f"Created database record for PR: {pr_id}")
         except Exception as e:
             logger.error(f"Failed to create PR record: {str(e)}")
+            # Continue without database - functionality will be limited
+            db_manager = None
 
     repo_path = None
     edit_summary = {
@@ -216,7 +218,7 @@ async def process_pull_request(payload: Dict[str, Any]):
         
         if not conflicting_files:
             logger.info(f"No conflicts detected for PR #{pr_number}")
-            if db_manager:
+            if db_manager and pr_id:
                 db_manager.log_completion(pr_id, True, "No conflicts detected")
             git_manager.cleanup(repo_path)
             return
@@ -224,14 +226,14 @@ async def process_pull_request(payload: Dict[str, Any]):
         logger.info(f"Conflicts detected in files: {conflicting_files}")
         
         # Log conflict detection
-        if db_manager:
+        if db_manager and pr_id:
             db_manager.log_conflict_detection(pr_id, conflicting_files)
 
         # 3. AI Resolution
         logger.info("Step 3: Starting AI conflict resolution...")
         if not ai_resolver:
             logger.error("AIResolver not initialized. Missing GCP_PROJECT_ID?")
-            if db_manager:
+            if db_manager and pr_id:
                 db_manager.log_completion(pr_id, False, "AIResolver not initialized")
             return
 
@@ -242,7 +244,7 @@ async def process_pull_request(payload: Dict[str, Any]):
                 logger.info(f"Retrieved conflict context for {file_path} ({len(conflict_content)} chars)")
                 
                 # Store conflict file in storage
-                if storage_manager:
+                if storage_manager and pr_id:
                     storage_manager.store_conflict_file(
                         pr_id, file_path, conflict_content, "", 
                         {"branch": source_branch, "pr_number": pr_number}
@@ -257,14 +259,14 @@ async def process_pull_request(payload: Dict[str, Any]):
                 logger.info(f"Applied resolution for {file_path}")
                 
                 # Store resolved file in storage
-                if storage_manager:
+                if storage_manager and pr_id:
                     storage_manager.store_conflict_file(
                         pr_id, file_path, conflict_content, resolved_content,
                         {"branch": source_branch, "pr_number": pr_number, "status": "resolved"}
                     )
                 
                 # Log successful resolution
-                if db_manager:
+                if db_manager and pr_id:
                     db_manager.log_resolution_attempt(pr_id, file_path, True)
                 
                 edit_summary["conflicts_resolved"].append({
@@ -276,7 +278,7 @@ async def process_pull_request(payload: Dict[str, Any]):
                 
             except Exception as e:
                 logger.error(f"Error resolving conflict in {file_path}: {str(e)}")
-                if db_manager:
+                if db_manager and pr_id:
                     db_manager.log_resolution_attempt(pr_id, file_path, False, str(e))
                 
                 edit_summary["conflicts_resolved"].append({
@@ -304,10 +306,10 @@ async def process_pull_request(payload: Dict[str, Any]):
             output = str(e)
 
         # Store validation results
-        if storage_manager:
+        if storage_manager and pr_id:
             storage_manager.store_validation_log(pr_id, output, success)
         
-        if db_manager:
+        if db_manager and pr_id:
             db_manager.log_validation_result(pr_id, success, output)
 
         if success:
@@ -324,7 +326,7 @@ async def process_pull_request(payload: Dict[str, Any]):
                 logger.info(f"Successfully committed and pushed resolved conflicts for PR #{pr_number}")
                 
                 # Store git diff
-                if storage_manager and repo_path:
+                if storage_manager and repo_path and pr_id:
                     try:
                         import subprocess
                         diff_result = subprocess.run(
@@ -339,7 +341,7 @@ async def process_pull_request(payload: Dict[str, Any]):
                         logger.error(f"Failed to store git diff: {str(e)}")
                 
                 # Log completion
-                if db_manager:
+                if db_manager and pr_id:
                     db_manager.log_completion(pr_id, True)
                 
                 edit_summary["status"] = "success"
@@ -348,7 +350,7 @@ async def process_pull_request(payload: Dict[str, Any]):
                 logger.error(f"Failed to commit and push for PR #{pr_number}: {str(e)}")
                 logger.exception("Full exception details:")
                 
-                if db_manager:
+                if db_manager and pr_id:
                     db_manager.log_completion(pr_id, False, str(e))
                 
                 edit_summary["status"] = "push_failed"
@@ -357,14 +359,14 @@ async def process_pull_request(payload: Dict[str, Any]):
         else:
             logger.error(f"Validation failed for PR #{pr_number}:\n{output}")
             
-            if db_manager:
+            if db_manager and pr_id:
                 db_manager.log_completion(pr_id, False, f"Validation failed: {output}")
             
             edit_summary["status"] = "validation_failed"
             edit_summary["errors"].append(f"Validation failed: {output}")
 
         # Store edit summary
-        if storage_manager:
+        if storage_manager and pr_id:
             from datetime import datetime
             edit_summary["timestamp"] = datetime.utcnow().isoformat()
             storage_manager.store_edit_summary(pr_id, edit_summary)

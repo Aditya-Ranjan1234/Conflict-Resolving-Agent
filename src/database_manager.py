@@ -26,28 +26,32 @@ class DatabaseManager:
     
     def create_pr_record(self, pr_data: Dict[str, Any], repo_data: Dict[str, Any]) -> str:
         """Create a new PR record in Datastore."""
-        pr_id = str(uuid.uuid4())
-        
-        key = self.client.key("PRRecord", pr_id)
-        
-        entity = datastore.Entity(key)
-        entity.update({
-            "pr_number": pr_data.get("number"),
-            "repo_name": repo_data.get("full_name"),
-            "source_branch": pr_data.get("head", {}).get("ref"),
-            "target_branch": pr_data.get("base", {}).get("ref"),
-            "status": "processing",
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
-            "conflicts_detected": False,
-            "files_with_conflicts": [],
-            "resolution_successful": False,
-            "error_message": None
-        })
-        
-        self.client.put(entity)
-        logger.info(f"Created PR record: {pr_id} for PR #{pr_data.get('number')}")
-        return pr_id
+        try:
+            pr_id = str(uuid.uuid4())
+            
+            key = self.client.key("PRRecord", pr_id)
+            
+            entity = datastore.Entity(key)
+            entity.update({
+                "pr_number": pr_data.get("number"),
+                "repo_name": repo_data.get("full_name"),
+                "source_branch": pr_data.get("head", {}).get("ref"),
+                "target_branch": pr_data.get("base", {}).get("ref"),
+                "status": "processing",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+                "conflicts_detected": False,
+                "files_with_conflicts": [],
+                "resolution_successful": False,
+                "error_message": None
+            })
+            
+            self.client.put(entity)
+            logger.info(f"Created PR record: {pr_id} for PR #{pr_data.get('number')}")
+            return pr_id
+        except Exception as e:
+            logger.error(f"Failed to create PR record: {str(e)}")
+            raise
     
     def update_pr_status(self, pr_id: str, status: str, **kwargs):
         """Update PR status and additional fields."""

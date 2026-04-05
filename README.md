@@ -1,19 +1,30 @@
 # Conflict Resolving Agent 🤖
 
-An AI agent that automatically detects, understands, and resolves Git merge conflicts with minimal human intervention.
+## 📌 Overview
+This project is an AI-based conflict resolving agent...
 
-## 🏗️ System Architecture (GCP)
-1. **Trigger Layer**: GitHub Webhooks → Cloud Run
-2. **Detection Service**: Cloud Run pulls repo and runs `git merge`.
-3. **AI Resolution Engine**: Vertex AI (Gemini) resolves conflicts.
-4. **Validation Layer**: Cloud Build runs tests.
-5. **Auto Commit**: Pushes fixed code back to GitHub.
+## 🚀 Features
+- Natural language conflict resolution
+- Context-aware responses
+- Scalable architecture
 
-## 🚀 Setup & Deployment
-Refer to `GCP_SETUP_GUIDE.md` for detailed instructions on setting up the Google Cloud Console from scratch.
+## 🛠 Tech Stack
+- Python
+- LLM APIs
+- Flask (if used)
 
-## 🛠️ Local Development
-1. Create a virtual environment: `python -m venv venv`
-2. Activate: `.\venv\Scripts\activate`
-3. Install dependencies: `pip install -r requirements.txt`
-4. Run the service: `python src/main.py`
+## ☁️ Deployment on GCP
+
+### 1. Create a Project
+- Go to Google Cloud Console
+- Create a new project
+
+### 2. Enable APIs
+- Enable Compute Engine / Cloud Run
+
+### 3. Deploy using Cloud Run
+```bash
+gcloud run deploy conflict-agent \
+  --source . \
+  --region asia-south1 \
+  --allow-unauthenticated

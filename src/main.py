@@ -105,6 +105,10 @@ async def get_pr_details(pr_id: str):
         raise HTTPException(status_code=503, detail="Database or Storage not available")
     
     try:
+        # Validate pr_id parameter
+        if not pr_id or pr_id.strip() == "":
+            raise HTTPException(status_code=400, detail="Invalid PR ID")
+        
         # Get resolution details from database
         resolution_details = db_manager.get_resolution_details(pr_id)
         
@@ -127,6 +131,10 @@ async def get_pr_conflicts(pr_id: str):
         raise HTTPException(status_code=503, detail="Storage not available")
     
     try:
+        # Validate pr_id parameter
+        if not pr_id or pr_id.strip() == "":
+            raise HTTPException(status_code=400, detail="Invalid PR ID")
+        
         conflicts = storage_manager.get_conflict_history(pr_id)
         return {"pr_id": pr_id, "conflicts": conflicts}
     except Exception as e:
@@ -166,6 +174,9 @@ async def handle_webhook(request: Request, background_tasks: BackgroundTasks):
 
 async def process_pull_request(payload: Dict[str, Any]):
     """Background task to handle conflict resolution."""
+    # Access the global managers defined at module level
+    global db_manager, storage_manager, ai_resolver, git_manager
+    
     logger.info("Starting PR processing...")
     
     pr_data = payload.get("pull_request")

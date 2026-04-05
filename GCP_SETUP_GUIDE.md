@@ -14,6 +14,9 @@ Enable the following APIs in the **API & Services > Library** section:
 - **Cloud Run API**: For hosting the backend service.
 - **Cloud Build API**: For CI/CD and validation.
 - **Secret Manager API**: To securely store your GitHub Token.
+- **Cloud Datastore API**: For storing PR logs and metadata.
+- **Cloud Storage API**: For storing conflict files and edit history.
+- **Cloud Logging API**: For enhanced logging capabilities.
 
 ## Step 3: Set up Authentication
 1. Go to **IAM & Admin > Service Accounts**.
@@ -24,6 +27,9 @@ Enable the following APIs in the **API & Services > Library** section:
    - `Cloud Build Editor`
    - `Secret Manager Secret Accessor`
    - `Logs Writer`
+   - `Cloud Datastore User`
+   - `Storage Object Admin`
+   - `Logging Admin`
 5. Click **Create and Continue**, then **Done**.
 
 ## Step 4: Store GitHub Token in Secret Manager
@@ -57,6 +63,9 @@ To deploy your agent directly from the GCP website:
      - Click **ADD VARIABLE**:
        - Name: `GCP_PROJECT_ID`
        - Value: `[YOUR_PROJECT_ID]`
+     - Click **ADD VARIABLE** (Optional):
+       - Name: `STORAGE_BUCKET_NAME`
+       - Value: `custom-bucket-name` (leave empty to use auto-generated)
      - Click **REFERENCE A SECRET**:
        - Select `GITHUB_TOKEN`.
        - Version: `latest`.
@@ -79,3 +88,41 @@ To deploy your agent directly from the GCP website:
 1. Create a Pull Request in your repo that has a merge conflict.
 2. Watch the logs in Cloud Run to see the agent detect and resolve it.
 3. If validation passes, you should see a new commit on the PR branch with the fix!
+
+---
+
+## 📊 New Features: Database & Storage
+
+### What's Added:
+- **GCP Datastore**: Stores PR processing logs, status tracking, and resolution history
+- **Google Cloud Storage**: Stores conflict files, resolved versions, git diffs, and edit summaries
+- **Enhanced Logging**: Cloud Logging integration for better monitoring
+
+### API Endpoints:
+- `GET /history/{repo_name}` - Get PR processing history
+- `GET /pr/{pr_id}/details` - Get detailed PR processing information
+- `GET /pr/{pr_id}/conflicts` - Get conflict files for a specific PR
+
+### Storage Structure:
+```
+your-project-storage/
+├── conflicts/{pr_id}/
+│   ├── timestamp_file_conflict.py
+│   └── timestamp_file_resolved.py
+├── summaries/{pr_id}/
+│   └── timestamp_edit_summary.json
+├── validation/{pr_id}/
+│   └── timestamp_validation.json
+└── diffs/{pr_id}/
+    └── timestamp_changes.diff
+```
+
+### Database Schema:
+- **PRRecord**: Main PR tracking (status, timestamps, conflict info)
+- **ResolutionRecord**: Individual file resolution attempts
+
+### Monitoring:
+- Check Cloud Logging for detailed process logs
+- Use Cloud Console to browse Datastore entities
+- Access Cloud Storage bucket to view conflict files
+- Monitor costs in GCP Billing dashboard

@@ -3,8 +3,12 @@ uvicorn
 python-multipart
 google-cloud-aiplatform
 google-cloud-secret-manager
+google-cloud-datastore
+google-cloud-storage
+google-cloud-logging
 GitPython
 requests
 pydantic
 python-dotenv
 pytest
+uuid
